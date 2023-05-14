@@ -2,6 +2,8 @@ ENV["RACK_ENV"] = "test"
 
 require "minitest/autorun"
 require "rack/test"
+require "minitest/reporters"
+Minitest::Reporters.use!
 
 require_relative "../cms"
 
@@ -28,5 +30,19 @@ class CMSTest < Minitest::Test
     assert_equal 200, last_response.status
     assert_equal "text/plain", last_response["Content-Type"]
     assert_includes last_response.body, "Ruby 0.95 released"
+  end
+
+  def test_document_not_found
+    get "/notafile.ext" # Attempt to access nonexistent file
+
+    assert_equal 302, last_response.status # Assert user redirected
+
+    get last_response["Location"] # Request the page for redirection
+
+    assert_equal 200, last_response.status
+    assert_includes last_response.body, "notafile.ext does not exist"
+
+    get "/" # Reload the page
+    refute_includes last_response.body, "notafile.ext does not exist" # Assert that messages was removed
   end
 end
