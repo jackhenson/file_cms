@@ -40,7 +40,8 @@ def data_path
 end
 
 get "/" do
-  @files = Dir.glob(root + "/data/*").map do |path|
+  pattern = File.join(data_path, "*")
+  @files = Dir.glob(pattern).map do |path|
     File.basename(path)
   end
   erb :index, layout: :layout
