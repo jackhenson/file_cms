@@ -25,9 +25,9 @@ def load_file_content(path)
   case File.extname(path)
   when ".txt"
     headers["Content-Type"] = "text/plain"
-    File.read(path)
+    content 
   when ".md"
-    render_markdown(content)
+    erb render_markdown(content)
   end
 end
 
@@ -45,6 +45,27 @@ get "/" do
     File.basename(path)
   end
   erb :index, layout: :layout
+end
+
+get "/new" do
+  erb :new, layout: :layout
+end
+
+post "/create" do
+  filename = params['filename'].to_s
+
+  if filename.size == 0
+    session[:message] = "A name is required."
+    status 422
+    erb :new
+  else
+    file_path = File.join(data_path, filename)
+
+    File.write(file_path, "")
+    session[:message] = "#{params['filename']} has been created."
+
+    redirect "/"
+  end
 end
 
 get "/:filename" do

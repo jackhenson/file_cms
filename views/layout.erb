@@ -1,14 +1,15 @@
 <!doctype html>
 <html lang="en-US">
+  <head>
+    <title>CMS File Manager</title>
+    <meta charset="UTF-8">
+    <link href="/stylesheets/cms.css" rel="stylesheet" type="text/css" />
+  </head>  
   <body>
-    
     <% if session[:message] %>
       <!-- Deletes and returns hash value -->
-      <p><%= session.delete(:message) %></p>
+      <p class="message"><%= session.delete(:message) %></p>
     <% end %>
-    
-    <main>
-      <%= yield %>
-    </main>
+    <%= yield %>
   </body>
 </html>
