@@ -1,5 +1,3 @@
 {
-  admin: secret
-  bill: billspassword
-  sonia: soniaspassword
+  developer: letmein
 }
