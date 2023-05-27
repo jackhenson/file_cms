@@ -39,9 +39,18 @@ def data_path
   end
 end
 
-get "/" do
-  redirect "/users/signin" unless session['user']
+def user_signed_in?
+  session.key? :username
+end
 
+def require_signed_in_user
+  unless user_signed_in?
+    session[:message] = "You must be signed in to do that."
+    redirect "/"
+  end
+end
+
+get "/" do
   pattern = File.join(data_path, "*")
   @files = Dir.glob(pattern).map do |path|
     File.basename(path)
@@ -50,11 +59,15 @@ get "/" do
 end
 
 get "/new" do
+  require_signed_in_user
+
   erb :new, layout: :layout
 end
 
 post "/create" do
-  filename = params['filename'].to_s
+  require_signed_in_user
+
+  filename = params[:filename].to_s
 
   if filename.size == 0
     session[:message] = "A name is required."
@@ -64,48 +77,55 @@ post "/create" do
     file_path = File.join(data_path, filename)
 
     File.write(file_path, "")
-    session[:message] = "#{params['filename']} has been created."
+    session[:message] = "#{params[:filename]} has been created"
 
     redirect "/"
   end
 end
 
 get "/:filename" do
-  file_path = File.join(data_path, params['filename']) 
+  file_path = File.join(data_path, params[:filename]) 
 
   if File.exist?(file_path) 
     load_file_content(file_path) 
   else
-    session[:message] = "#{params['filename']} does not exist."
+    session[:message] = "#{params[:filename]} does not exist"
     redirect '/' 
   end
 end
 
 # Edit contents of existing page
 get "/:filename/edit" do
-  file_path = File.join(data_path, params['filename'])
-  @filename = params['filename']
+  require_signed_in_user
+
+  file_path = File.join(data_path, params[:filename])
+
+  @filename = params[:filename]
   @content = File.read(file_path)
 
-  erb :edit, layout: :layout
-end
+  erb :edit
+ end
 
 # Updates existing page
 post "/:filename" do
-  file_path = File.join(data_path, params['filename'])
+  require_signed_in_user
+
+  file_path = File.join(data_path, params[:filename])
 
   File.write(file_path, params[:content])
 
-  session[:message] = "#{params['filename']} has been updated."
+  session[:message] = "#{params[:filename]} has been updated"
   redirect "/"
 end
 
 post "/:filename/delete" do
-  file_path = File.join(data_path, params['filename'])
+  require_signed_in_user
+
+  file_path = File.join(data_path, params[:filename])
 
   File.delete(file_path)
 
-  session[:message] = "#{params['filename']} has been deleted."
+  session[:message] = "#{params[:filename]} has been deleted"
   redirect "/"
 end
 
@@ -114,9 +134,9 @@ get "/users/signin" do
 end
 
 post "/users/signin" do
-  if params['username'] == "admin" && params['password'] == "secret"
-    session['username'] = params['username'] 
-    session['message'] = "You were successfully signed in."
+  if params[:username] == "admin" && params[:password] == "secret"
+    session[:username] = params[:username] 
+    session[:message] = "Welcome!"
     redirect "/"
   else
     session[:message] = "Invalid credentials"
@@ -126,8 +146,8 @@ post "/users/signin" do
 end
 
 post "/users/signout" do
-  session.delete 'username'
-  session['message'] = "You were successfully signed out."
+  session.delete :username
+  session[:message] = "You have been signed out"
   redirect "/"
 end
 
